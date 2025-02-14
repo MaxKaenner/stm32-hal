@@ -44,6 +44,7 @@ const MAX_ADVREGEN_STARTUP_US: u32 = 10;
 pub enum AdcDevice {
     One,
     Two,
+    #[cfg(not(feature = "h7b3"))]
     Three,
     #[cfg(feature = "g4")] // todo: Check the specifics.
     Four,
@@ -386,6 +387,12 @@ macro_rules! hal {
                                 rcc_en_reset!(ahb1, [<adc $rcc_num>], rcc);
                             } else if #[cfg(feature = "f4")] {
                                 rcc_en_reset!(2, [<adc $rcc_num>], rcc);
+                            } else if #[cfg(feature = "h7b3")] {
+                                match device {
+                                    AdcDevice::One | AdcDevice::Two => {
+                                        rcc.ahb1enr.modify(|_, w| w.adc12en().set_bit());
+                                    }
+                                }
                             } else if #[cfg(feature = "h7")] {
                                 match device {
                                     AdcDevice::One | AdcDevice::Two => {
@@ -1233,6 +1240,11 @@ cfg_if! {
     if #[cfg(feature = "h7")] {
         hal!(ADC1, ADC12_COMMON, adc1, 12);
         hal!(ADC2, ADC12_COMMON, adc2, 12);
+    }
+}
+
+cfg_if! {
+    if #[cfg(all(feature = "h7", not(feature = "h7b3")))] {
         hal!(ADC3, ADC3_COMMON, adc3, 3);
     }
 }

@@ -221,7 +221,7 @@ pub enum SaiSrc {
     Pll2P = 0b001,
     Pll3P = 0b010,
     I2sCkin = 0b011,
-    PerClk = 0100,
+    PerClk = 0b100,
 }
 
 #[derive(Clone, Copy, PartialEq)]
@@ -233,7 +233,7 @@ pub enum Spi123Src {
     Pll2P = 0b001,
     Pll3P = 0b010,
     I2sCkin = 0b011,
-    PerClk = 0100,
+    PerClk = 0b100,
 }
 
 #[derive(Clone, Copy, PartialEq)]
@@ -244,7 +244,7 @@ pub enum Spi45Src {
     Pll2Q = 0b001,
     Pll3Q = 0b010,
     Hsi = 0b011,
-    Csi = 0100,
+    Csi = 0b100,
     HseCk = 0b101,
 }
 
@@ -539,8 +539,11 @@ impl Clocks {
                 // 3. Reset the ODEN bit in the SYSCFG_PWRCR register to disable VOS0.
             }
             _ => {
-                #[cfg(feature = "h7")]
+                #[cfg(all(feature = "h7", not(feature = "h7b3")))]
                 pwr.d3cr
+                    .modify(|_, w| unsafe { w.vos().bits(self.vos_range as u8) });
+                #[cfg(all(feature = "h7", feature = "h7b3"))]
+                pwr.srdcr
                     .modify(|_, w| unsafe { w.vos().bits(self.vos_range as u8) });
                 #[cfg(feature = "h5")]
                 pwr.voscr
@@ -627,22 +630,39 @@ impl Clocks {
             w.stopwuck().bit(self.stop_wuck as u8 != 0)
         });
 
-        #[cfg(feature = "h7")]
+        #[cfg(all(feature = "h7", not(feature = "h7b3")))]
         rcc.d1cfgr.modify(|_, w| unsafe {
             w.d1cpre().bits(self.d1_core_prescaler as u8);
             w.d1ppre().bits(self.d1_prescaler as u8);
             w.hpre().bits(self.hclk_prescaler as u8)
         });
 
-        #[cfg(feature = "h7")]
+        #[cfg(all(feature = "h7", not(feature = "h7b3")))]
         rcc.d2cfgr.modify(|_, w| unsafe {
             w.d2ppre1().bits(self.d2_prescaler1 as u8);
             w.d2ppre2().bits(self.d2_prescaler2 as u8)
         });
 
-        #[cfg(feature = "h7")]
+        #[cfg(all(feature = "h7", not(feature = "h7b3")))]
         rcc.d3cfgr
             .modify(|_, w| unsafe { w.d3ppre().bits(self.d3_prescaler as u8) });
+
+        #[cfg(all(feature = "h7", feature = "h7b3"))]
+        rcc.cdcfgr1.modify(|_, w| unsafe {
+            w.cdcpre().bits(self.d1_core_prescaler as u8);
+            w.cdppre().bits(self.d1_prescaler as u8);
+            w.hpre().bits(self.hclk_prescaler as u8)
+        });
+
+        #[cfg(all(feature = "h7", feature = "h7b3"))]
+        rcc.cdcfgr2.modify(|_, w| unsafe {
+            w.cdppre1().bits(self.d2_prescaler1 as u8);
+            w.cdppre2().bits(self.d2_prescaler2 as u8)
+        });
+
+        #[cfg(all(feature = "h7", feature = "h7b3"))]
+        rcc.srdcfgr
+            .modify(|_, w| unsafe { w.srdppre().bits(self.d3_prescaler as u8) });
 
         #[cfg(feature = "h5")]
         rcc.cfgr2.modify(|_, w| unsafe {

@@ -633,10 +633,14 @@ pub fn debug_workaround() {
     let dbgmcu = unsafe { &(*pac::DBGMCU::ptr()) };
 
     cfg_if! {
-        if #[cfg(all(feature = "h7", not(any(feature = "h747cm4", feature = "h747cm7"))))] {
+        if #[cfg(all(feature = "h7", not(any(feature = "h747cm4", feature = "h747cm7", feature = "h7b3"))))] {
             dbgmcu.cr.modify(|_, w| w.dbgsleep_d1().set_bit());
             dbgmcu.cr.modify(|_, w| w.dbgstop_d1().set_bit());
             dbgmcu.cr.modify(|_, w| w.dbgstby_d1().set_bit());
+        } else if #[cfg(all(feature = "h7", feature = "h7b3"))] {
+            dbgmcu.cr.modify(|_, w| w.dbgsleep_cd().set_bit());
+            dbgmcu.cr.modify(|_, w| w.dbgstop_cd().set_bit());
+            dbgmcu.cr.modify(|_, w| w.dbgstby_cd().set_bit());
         } else if #[cfg(feature = "h7")] {
             dbgmcu.cr.modify(|_, w| w.dbgslpd1().set_bit());
             dbgmcu.cr.modify(|_, w| w.dbgstpd1().set_bit());

@@ -25,7 +25,7 @@ impl CrcExt for CRC {
                 rcc.ahbenr.modify(|_, w| w.crcen().set_bit());
                 rcc.ahbrstr.modify(|_, w| w.crcrst().set_bit());
                 rcc.ahbrstr.modify(|_, w| w.crcrst().clear_bit());
-            } else if #[cfg(any(feature = "l4", feature = "wb", feature = "l5", feature = "g4"))] {
+            } else if #[cfg(any(feature = "l4", feature = "wb", feature = "l5", feature = "g4", feature = "h7b3"))] {
                 rcc.ahb1enr.modify(|_, w| w.crcen().set_bit());
                 rcc.ahb1rstr.modify(|_, w| w.crcrst().set_bit());
                 rcc.ahb1rstr.modify(|_, w| w.crcrst().clear_bit());
